@@ -40,9 +40,6 @@ textarea {
   gap: 24px;
   justify-content: space-between;
   padding: 24px clamp(18px, 4vw, 48px);
-  position: sticky;
-  top: 0;
-  z-index: 5;
 }
 
 .brand-block {
