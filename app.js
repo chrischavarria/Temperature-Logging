@@ -1,3 +1,5 @@
+const DEFAULT_SCRIPT_URL = "";
+
 const LOG_DEFINITIONS = [
   {
     id: "temperatureHumidity",
@@ -61,7 +63,10 @@ const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 
 const state = {
   entries: readJson(STORAGE_KEY, []),
-  settings: readJson(SETTINGS_KEY, { scriptUrl: "" })
+  settings: {
+    scriptUrl: DEFAULT_SCRIPT_URL,
+    ...readJson(SETTINGS_KEY, {})
+  }
 };
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -446,14 +451,28 @@ function switchView(viewId) {
 }
 
 function saveSettings() {
-  state.settings.scriptUrl = $("#scriptUrl").value.trim();
+  state.settings.scriptUrl = $("#scriptUrl").value.trim() || DEFAULT_SCRIPT_URL;
   writeJson(SETTINGS_KEY, state.settings);
   $("#syncStatus").textContent = "Settings saved";
 }
 
 function sendTestPing() {
   saveSettings();
-  postToSheet({ action: "testPing", message: "Temperature Logging Checklist test ping" });
+  if (!state.settings.scriptUrl) return;
+  const callbackName = `temperatureLoggingPing_${Date.now()}`;
+  window[callbackName] = (payload) => {
+    $("#syncStatus").textContent = payload.ok ? "Endpoint connected" : "Endpoint test failed";
+    delete window[callbackName];
+    script.remove();
+  };
+  const script = document.createElement("script");
+  script.onerror = () => {
+    $("#syncStatus").textContent = "Endpoint test failed";
+    delete window[callbackName];
+    script.remove();
+  };
+  script.src = `${state.settings.scriptUrl}?action=testPing&callback=${callbackName}`;
+  document.body.appendChild(script);
 }
 
 function refreshFromSheet() {
