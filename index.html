@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Temperature Logging Checklist</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="app-header">
+      <div>
+        <p class="eyebrow">Daily facilities documentation</p>
+        <h1>Temperature Logging Checklist</h1>
+      </div>
+      <nav class="tabs" aria-label="Primary">
+        <button class="tab is-active" type="button" data-view="entryView">Entry</button>
+        <button class="tab" type="button" data-view="dashboardView">Dashboard</button>
+        <button class="tab" type="button" data-view="settingsView">Settings</button>
+      </nav>
+    </header>
+
+    <main>
+      <section id="entryView" class="view is-active" aria-labelledby="entryTitle">
+        <div class="section-head">
+          <div>
+            <h2 id="entryTitle">New checklist entry</h2>
+            <p>Complete each applicable log, or mark the documented day as N/A with a required note.</p>
+          </div>
+          <div class="status-chip" id="syncStatus">Offline-ready</div>
+        </div>
+
+        <form id="entryForm" class="entry-form">
+          <section class="panel">
+            <h3>Documentation details</h3>
+            <div class="form-grid">
+              <label>
+                Employee
+                <input id="employee" name="employee" autocomplete="name" required>
+              </label>
+              <label>
+                Initials
+                <input id="initials" name="initials" maxlength="5" required>
+              </label>
+              <label>
+                Documented day
+                <input id="documentedDate" name="documentedDate" type="date" required>
+              </label>
+              <label>
+                Physical completion time
+                <input id="completionTime" name="completionTime" type="time" required>
+              </label>
+              <label>
+                Submitted on
+                <input id="submittedDate" name="submittedDate" type="date" required>
+              </label>
+              <label>
+                Area
+                <select id="area" name="area" required>
+                  <option value="">Select area</option>
+                  <option>Pharmacy</option>
+                  <option>Storage</option>
+                  <option>Cleanroom</option>
+                  <option>Lab</option>
+                  <option>Other</option>
+                </select>
+              </label>
+            </div>
+
+            <label id="dateChangeNoteWrap" class="note-field is-hidden">
+              Required note for documentation date change
+              <textarea id="dateChangeNote" name="dateChangeNote" rows="3" placeholder="Example: Thursday 04/23/2026 tasks completed at 5:00 PM by Ali; electronic submission entered Friday 04/24/2026."></textarea>
+            </label>
+
+            <div class="switch-row">
+              <label class="checkbox-line">
+                <input id="markNA" name="markNA" type="checkbox">
+                Mark documented day N/A
+              </label>
+              <p>Use this for non-working days or days when the listed checks do not apply.</p>
+            </div>
+
+            <label id="naCommentWrap" class="note-field is-hidden">
+              Required N/A comment
+              <textarea id="naComment" name="naComment" rows="3" placeholder="Add the reason this documented day is N/A."></textarea>
+            </label>
+          </section>
+
+          <section class="log-list" id="logList" aria-label="Checklist logs"></section>
+
+          <section id="outOfSpecPanel" class="alert-panel is-hidden" role="alert">
+            <h3>Out-of-spec result detected</h3>
+            <p>Before saving this in-process entry, the employee must immediately inform their direct supervisor.</p>
+            <label class="checkbox-line">
+              <input id="supervisorAcknowledged" type="checkbox">
+              I informed my direct supervisor immediately.
+            </label>
+          </section>
+
+          <section class="submit-row">
+            <button class="secondary" id="saveDraft" type="button">Save draft</button>
+            <button class="primary" id="submitComplete" type="submit">Submit complete entry</button>
+            <button class="warning is-hidden" id="submitInProcess" type="button">Save in-process entry</button>
+          </section>
+        </form>
+      </section>
+
+      <section id="dashboardView" class="view" aria-labelledby="dashboardTitle">
+        <div class="section-head">
+          <div>
+            <h2 id="dashboardTitle">Dashboard</h2>
+            <p>Review saved entries, filter by date range, status, area, employee, or log type.</p>
+          </div>
+          <button class="secondary" id="refreshDashboard" type="button">Refresh</button>
+        </div>
+
+        <section class="panel">
+          <div class="filter-grid">
+            <label>
+              Start date
+              <input id="filterStart" type="date">
+            </label>
+            <label>
+              End date
+              <input id="filterEnd" type="date">
+            </label>
+            <label>
+              Area
+              <select id="filterArea">
+                <option value="">All areas</option>
+              </select>
+            </label>
+            <label>
+              Status
+              <select id="filterStatus">
+                <option value="">All statuses</option>
+                <option>Complete</option>
+                <option>In Process</option>
+                <option>N/A</option>
+                <option>Draft</option>
+              </select>
+            </label>
+            <label>
+              Log type
+              <select id="filterLog">
+                <option value="">All logs</option>
+              </select>
+            </label>
+            <label>
+              Employee
+              <input id="filterEmployee" placeholder="Any employee">
+            </label>
+          </div>
+        </section>
+
+        <section class="metrics" aria-label="Dashboard metrics">
+          <div><strong id="metricTotal">0</strong><span>Total entries</span></div>
+          <div><strong id="metricComplete">0</strong><span>Complete</span></div>
+          <div><strong id="metricInProcess">0</strong><span>In process</span></div>
+          <div><strong id="metricOutOfSpec">0</strong><span>Out of spec</span></div>
+        </section>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Documented day</th>
+                <th>Submitted</th>
+                <th>Area</th>
+                <th>Employee</th>
+                <th>Status</th>
+                <th>Logs</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody id="dashboardRows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="settingsView" class="view" aria-labelledby="settingsTitle">
+        <div class="section-head">
+          <div>
+            <h2 id="settingsTitle">Settings</h2>
+            <p>Connect this GitHub Pages checklist to your Google Sheet and Slack automation.</p>
+          </div>
+        </div>
+
+        <section class="panel">
+          <h3>Google Apps Script web app URL</h3>
+          <label>
+            Endpoint
+            <input id="scriptUrl" placeholder="https://script.google.com/macros/s/.../exec">
+          </label>
+          <div class="submit-row">
+            <button class="primary" id="saveSettings" type="button">Save settings</button>
+            <button class="secondary" id="testSettings" type="button">Send test ping</button>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h3>Automation expectations</h3>
+          <ul class="plain-list">
+            <li>AM Slack reminder: asks the team to complete the required logs.</li>
+            <li>PM Slack reminder: posts incomplete documented-day tasks.</li>
+            <li>Sunday weekly export: emails a CSV export and can also notify Slack.</li>
+            <li>Slack webhook and Sheet ID are stored in Apps Script properties, not in this public page.</li>
+          </ul>
+        </section>
+      </section>
+    </main>
+
+    <template id="logTemplate">
+      <article class="log-card">
+        <div class="log-card-head">
+          <div>
+            <h3></h3>
+            <p class="spec"></p>
+          </div>
+          <label class="checkbox-line">
+            <input class="log-enabled" type="checkbox" checked>
+            Include
+          </label>
+        </div>
+        <div class="measurement-list"></div>
+        <label>
+          Log notes
+          <textarea class="log-notes" rows="2"></textarea>
+        </label>
+      </article>
+    </template>
+
+    <script src="app.js"></script>
+  </body>
+</html>
