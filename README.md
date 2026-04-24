@@ -11,7 +11,7 @@ Static GitHub Pages checklist for daily temperature, humidity, differential pres
 
 ## Frontend Features
 
-- Required employee, initials, documented day/date, physical completion time, submitted date, area, acceptable response, result, and notes where applicable.
+- Required employee, initials, documented day/date, physical completion time, submitted date, acceptable response, result, and notes where applicable.
 - Automatic WNL/out-of-spec checks:
   - Temperature/humidity for Front Hallway, Tablet Room, Capsule Room, Back Hallway, Base Storage, Fulfillment Area, Non-HD Lab, Packing Area, HD Lab, and Receiving Area.
   - Room temperature: 68°F-77°F

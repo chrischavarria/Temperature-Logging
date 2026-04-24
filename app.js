@@ -1,4 +1,4 @@
-const DEFAULT_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzq2hgD8IyLxK82Rk8t5G4fjRpOECd-_q3uxwvh8uP7xX4J0R7Ew7drTEI7fjLeWqG-9w/exec";
+const DEFAULT_SCRIPT_URL = "";
 
 const TEMPERATURE_HUMIDITY_LOCATIONS = [
   "Front Hallway",
@@ -359,7 +359,7 @@ function collectEntry(status) {
     documentedDate: $("#documentedDate").value,
     completionTime: $("#completionTime").value,
     submittedDate: $("#submittedDate").value,
-    area: $("#area").value,
+    area: "Daily Facility Check",
     status: isNA ? "N/A" : status,
     dateChangeNote: $("#dateChangeNote").value.trim(),
     naComment: $("#naComment").value.trim(),
@@ -412,7 +412,6 @@ function loadDraft() {
   $("#documentedDate").value = draft.documentedDate || $("#documentedDate").value;
   $("#completionTime").value = draft.completionTime || "";
   $("#submittedDate").value = draft.submittedDate || $("#submittedDate").value;
-  $("#area").value = draft.area || "";
   $("#markNA").checked = draft.status === "N/A";
   $("#dateChangeNote").value = draft.dateChangeNote || "";
   $("#naComment").value = draft.naComment || "";
