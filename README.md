@@ -5,6 +5,7 @@ Static GitHub Pages checklist for daily temperature, humidity, differential pres
 ## Files
 
 - `index.html`, `styles.css`, `app.js`: the GitHub Pages app.
+- `scriptstation-logo.svg`: ScriptStation logo asset used in the app header.
 - `google-apps-script.gs`: Google Apps Script backend for Google Sheets, Slack reminders, and weekly exports.
 - Source `.docx` files: original paper forms used to define checklist fields and ranges.
 
