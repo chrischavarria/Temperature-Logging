@@ -1,48 +1,91 @@
-const DEFAULT_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzq2hgD8IyLxK82Rk8t5G4fjRpOECd-_q3uxwvh8uP7xX4J0R7Ew7drTEI7fjLeWqG-9w/exec";
+const DEFAULT_SCRIPT_URL = "";
+
+const TEMPERATURE_HUMIDITY_LOCATIONS = [
+  "Front Hallway",
+  "Tablet Room",
+  "Capsule Room",
+  "Back Hallway",
+  "Base Storage",
+  "Fulfillment Area",
+  "Non-HD Lab",
+  "Packing Area",
+  "HD Lab",
+  "Receiving Area"
+];
+
+const REFRIGERATOR_LOCATIONS = [
+  "Non-HD Lab Fridge",
+  "HD Lab Fridge",
+  "Receiving Fridge"
+];
+
+const FREEZER_LOCATIONS = [
+  "Non-HD Lab Freezer"
+];
+
+const EYEWASH_LOCATIONS = [
+  "Non-HD Lab",
+  "HD Lab"
+];
+
+const AREA_OPTIONS = [
+  "Daily Facility Check",
+  ...TEMPERATURE_HUMIDITY_LOCATIONS,
+  "Differential Pressure",
+  ...REFRIGERATOR_LOCATIONS,
+  ...FREEZER_LOCATIONS
+];
+
+const makeId = (prefix, location) => `${prefix}_${location.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "")}`;
 
 const LOG_DEFINITIONS = [
-  {
-    id: "temperatureHumidity",
-    name: "Temperature/Humidity Log",
-    areaDefault: "Pharmacy",
+  ...TEMPERATURE_HUMIDITY_LOCATIONS.map((location) => ({
+    id: makeId("temperatureHumidity", location),
+    name: `${location} Temperature/Humidity Log`,
+    group: "Temperature/Humidity",
+    location,
     spec: "Temperature 68°F-77°F and humidity <60%",
     measurements: [
-      { id: "temperature", label: "Room temperature", unit: "°F", min: 68, max: 77 },
-      { id: "humidity", label: "Humidity", unit: "%", min: null, max: 59.999 }
+      { id: "temperature", label: `${location} temperature`, unit: "°F", min: 68, max: 77 },
+      { id: "humidity", label: `${location} humidity`, unit: "%", min: null, max: 59.999 }
     ]
-  },
+  })),
   {
-    id: "differentialPressure",
+    id: "differentialPressure_daily",
     name: "Differential Pressure Log",
-    areaDefault: "Cleanroom",
-    spec: "Normal range -0.01 to -0.03 in H2O",
+    group: "Differential Pressure",
+    location: "Daily differential pressure check",
+    spec: "One location checked daily: AM and PM, normal range -0.01 to -0.03 in H2O",
     measurements: [
       { id: "amPressure", label: "AM pressure", unit: "in H2O", min: -0.03, max: -0.01 },
       { id: "pmPressure", label: "PM pressure", unit: "in H2O", min: -0.03, max: -0.01 }
     ]
   },
-  {
-    id: "refrigerator",
-    name: "Refrigerator Temperature Log",
-    areaDefault: "Storage",
+  ...REFRIGERATOR_LOCATIONS.map((location) => ({
+    id: makeId("refrigerator", location),
+    name: `${location} Temperature Log`,
+    group: "Refrigerator",
+    location,
     spec: "Normal range 36°F-46°F",
     measurements: [
-      { id: "refrigeratorTemp", label: "Refrigerator temperature", unit: "°F", min: 36, max: 46 }
+      { id: "refrigeratorTemp", label: `${location} temperature`, unit: "°F", min: 36, max: 46 }
     ]
-  },
-  {
-    id: "freezer",
-    name: "Freezer Temperature Log",
-    areaDefault: "Storage",
+  })),
+  ...FREEZER_LOCATIONS.map((location) => ({
+    id: makeId("freezer", location),
+    name: `${location} Temperature Log`,
+    group: "Freezer",
+    location,
     spec: "Normal range -13°F to 14°F",
     measurements: [
-      { id: "freezerTemp", label: "Freezer temperature", unit: "°F", min: -13, max: 14 }
+      { id: "freezerTemp", label: `${location} temperature`, unit: "°F", min: -13, max: 14 }
     ]
-  },
-  {
-    id: "eyewash",
-    name: "Eyewash Station Log",
-    areaDefault: "Lab",
+  })),
+  ...EYEWASH_LOCATIONS.map((location) => ({
+    id: makeId("eyewash", location),
+    name: `${location} Eyewash Station Log`,
+    group: "Eyewash",
+    location,
     spec: "Pathway clear, eyewash unobstructed, clear water flow, no leaks",
     measurements: [
       { id: "pathClear", label: "Pathway clear", type: "boolean" },
@@ -51,7 +94,7 @@ const LOG_DEFINITIONS = [
       { id: "noLeaks", label: "No leaks present", type: "boolean" },
       { id: "expiration", label: "Expiration", type: "date" }
     ]
-  }
+  }))
 ];
 
 const STORAGE_KEY = "temperatureLoggingEntries";
@@ -393,7 +436,7 @@ function loadDraft() {
 
 function renderFilterOptions() {
   const areaSelect = $("#filterArea");
-  ["Pharmacy", "Storage", "Cleanroom", "Lab", "Other"].forEach((area) => areaSelect.append(new Option(area, area)));
+  AREA_OPTIONS.forEach((area) => areaSelect.append(new Option(area, area)));
   const logSelect = $("#filterLog");
   LOG_DEFINITIONS.forEach((log) => logSelect.append(new Option(log.name, log.name)));
 }

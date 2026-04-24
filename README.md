@@ -13,12 +13,13 @@ Static GitHub Pages checklist for daily temperature, humidity, differential pres
 
 - Required employee, initials, documented day/date, physical completion time, submitted date, area, acceptable response, result, and notes where applicable.
 - Automatic WNL/out-of-spec checks:
+  - Temperature/humidity for Front Hallway, Tablet Room, Capsule Room, Back Hallway, Base Storage, Fulfillment Area, Non-HD Lab, Packing Area, HD Lab, and Receiving Area.
   - Room temperature: 68°F-77°F
   - Humidity: less than 60%
-  - Differential pressure: -0.03 to -0.01 in H2O for AM and PM
-  - Refrigerator: 36°F-46°F
-  - Freezer: -13°F to 14°F
-  - Eyewash: pathway clear, station unobstructed, clear water flow, no leaks, unexpired
+  - Differential pressure: one daily location, AM and PM, -0.03 to -0.01 in H2O
+  - Refrigerator checks for Non-HD Lab Fridge, HD Lab Fridge, and Receiving Fridge: 36°F-46°F
+  - Freezer check for Non-HD Lab Freezer: -13°F to 14°F
+  - Eyewash checks for Non-HD Lab and HD Lab: pathway clear, station unobstructed, clear water flow, no leaks, unexpired
 - In-process save path for out-of-spec entries, with required supervisor notification acknowledgement.
 - N/A day option with required comment.
 - Required note when the submitted date differs from the documented work date.
