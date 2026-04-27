@@ -100,7 +100,7 @@
         <div class="section-head">
           <div>
             <h2 id="dashboardTitle">Dashboard</h2>
-            <p>Review saved entries, filter by date range, status, area, employee, or log type.</p>
+            <p>Review saved entries, filter by date range, location, status, employee, or log type.</p>
           </div>
           <button class="secondary" id="refreshDashboard" type="button">Refresh</button>
         </div>
@@ -116,9 +116,9 @@
               <input id="filterEnd" type="date">
             </label>
             <label>
-              Area
+              Location
               <select id="filterArea">
-                <option value="">All areas</option>
+                <option value="">All locations</option>
               </select>
             </label>
             <label>
@@ -151,13 +151,31 @@
           <div><strong id="metricOutOfSpec">0</strong><span>Out of spec</span></div>
         </section>
 
+        <section class="panel chart-panel">
+          <div class="chart-head">
+            <div>
+              <h3>Trend graph</h3>
+              <p id="chartSummary">Select a location or log type to focus the trend.</p>
+            </div>
+            <label>
+              Metric
+              <select id="filterMetric">
+                <option value="">All numeric metrics</option>
+              </select>
+            </label>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="trendChart" width="1000" height="320" aria-label="Measurement trend chart"></canvas>
+          </div>
+        </section>
+
         <div class="table-wrap">
           <table>
             <thead>
               <tr>
                 <th>Documented day</th>
                 <th>Submitted</th>
-                <th>Area</th>
+                <th>Location(s)</th>
                 <th>Employee</th>
                 <th>Status</th>
                 <th>Logs</th>

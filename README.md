@@ -23,7 +23,9 @@ Static GitHub Pages checklist for daily temperature, humidity, differential pres
 - In-process save path for out-of-spec entries, with required supervisor notification acknowledgement.
 - N/A day option with required comment.
 - Required note when the submitted date differs from the documented work date.
-- Dashboard filters for date range, area, status, log type, and employee.
+- Dashboard filters for date range, location, status, log type, and employee.
+- Dashboard trend graph for numeric readings, with filters for location, log type, status, date range, employee, and metric.
+- Google Sheet writes to a master raw-entry tab and separate location tabs for easier review.
 
 ## Google Sheet and Apps Script Setup
 
@@ -35,6 +37,8 @@ Static GitHub Pages checklist for daily temperature, humidity, differential pres
    - `SLACK_WEBHOOK_URL`: the new Slack incoming webhook URL.
    - `EXPORT_EMAIL`: optional email address for weekly CSV exports.
 5. Run `setupTemperatureLogging()` once from Apps Script and approve permissions.
+   - This creates the master tab plus location tabs for temperature/humidity, pressure, refrigerator, freezer, and eyewash records.
+   - If the master tab already has entries, run `rebuildLocationTabs()` once to backfill the location tabs.
 6. Deploy as a web app:
    - Execute as: `Me`
    - Who has access: `Anyone`

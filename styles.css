@@ -377,6 +377,39 @@ button {
   font-weight: 700;
 }
 
+.chart-panel {
+  margin-top: 16px;
+}
+
+.chart-head {
+  align-items: end;
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.chart-head p {
+  color: var(--muted);
+  margin-bottom: 0;
+}
+
+.chart-head label {
+  min-width: 220px;
+}
+
+.chart-wrap {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow-x: auto;
+}
+
+.chart-wrap canvas {
+  display: block;
+  min-width: 760px;
+  width: 100%;
+}
+
 .table-wrap {
   background: #fff;
   border: 1px solid var(--line);
@@ -438,6 +471,15 @@ th {
 
   .submit-row button {
     width: 100%;
+  }
+
+  .chart-head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .chart-head label {
+    min-width: 0;
   }
 
   .brand-block {

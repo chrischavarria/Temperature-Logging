@@ -1,4 +1,4 @@
-const DEFAULT_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzq2hgD8IyLxK82Rk8t5G4fjRpOECd-_q3uxwvh8uP7xX4J0R7Ew7drTEI7fjLeWqG-9w/exec";
+const DEFAULT_SCRIPT_URL = "";
 
 const TEMPERATURE_HUMIDITY_LOCATIONS = [
   "Front Hallway",
@@ -29,11 +29,11 @@ const EYEWASH_LOCATIONS = [
 ];
 
 const AREA_OPTIONS = [
-  "Daily Facility Check",
   ...TEMPERATURE_HUMIDITY_LOCATIONS,
   "Differential Pressure",
   ...REFRIGERATOR_LOCATIONS,
-  ...FREEZER_LOCATIONS
+  ...FREEZER_LOCATIONS,
+  ...EYEWASH_LOCATIONS
 ];
 
 const makeId = (prefix, location) => `${prefix}_${location.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "")}`;
@@ -54,7 +54,7 @@ const LOG_DEFINITIONS = [
     id: "differentialPressure_daily",
     name: "Differential Pressure Log",
     group: "Differential Pressure",
-    location: "Daily differential pressure check",
+    location: "Differential Pressure",
     spec: "One location checked daily: AM and PM, normal range -0.01 to -0.03 in H2O",
     measurements: [
       { id: "amPressure", label: "AM pressure", unit: "in H2O", min: -0.03, max: -0.01 },
@@ -146,7 +146,7 @@ function bindEvents() {
   $("#testSettings").addEventListener("click", sendTestPing);
   $("#refreshDashboard").addEventListener("click", refreshFromSheet);
 
-  ["filterStart", "filterEnd", "filterArea", "filterStatus", "filterLog", "filterEmployee"].forEach((id) => {
+  ["filterStart", "filterEnd", "filterArea", "filterStatus", "filterLog", "filterEmployee", "filterMetric"].forEach((id) => {
     $(`#${id}`).addEventListener("input", renderDashboard);
   });
 }
@@ -343,6 +343,8 @@ function collectEntry(status) {
     return {
       id: log.id,
       name: log.name,
+      group: log.group,
+      location: log.location,
       spec: log.spec,
       included: enabled,
       notes: $(".log-notes", card).value,
@@ -435,9 +437,14 @@ function loadDraft() {
 
 function renderFilterOptions() {
   const areaSelect = $("#filterArea");
-  AREA_OPTIONS.forEach((area) => areaSelect.append(new Option(area, area)));
+  [...new Set(AREA_OPTIONS)].forEach((area) => areaSelect.append(new Option(area, area)));
   const logSelect = $("#filterLog");
   LOG_DEFINITIONS.forEach((log) => logSelect.append(new Option(log.name, log.name)));
+  const metricSelect = $("#filterMetric");
+  const metrics = [...new Set(LOG_DEFINITIONS.flatMap((log) => log.measurements)
+    .filter((measurement) => !measurement.type)
+    .map((measurement) => metricKey(measurement.label)))];
+  metrics.forEach((metric) => metricSelect.append(new Option(toTitleCase(metric), metric)));
 }
 
 function renderDashboard() {
@@ -448,11 +455,12 @@ function renderDashboard() {
   entries.forEach((entry) => {
     const tr = document.createElement("tr");
     const includedLogs = entry.logs.filter((log) => log.included).map((log) => log.name).join(", ") || "None";
+    const locations = entry.logs.filter((log) => log.included).map((log) => log.location || locationFromLog(log)).filter(Boolean);
     const notes = [entry.dateChangeNote, entry.naComment, ...entry.logs.map((log) => log.notes)].filter(Boolean).join(" | ");
     tr.innerHTML = `
       <td>${escapeHtml(entry.documentedDate)}</td>
       <td>${escapeHtml(entry.submittedDate)}</td>
-      <td>${escapeHtml(entry.area)}</td>
+      <td>${escapeHtml([...new Set(locations)].join(", ") || entry.area)}</td>
       <td>${escapeHtml(entry.employee)}</td>
       <td>${escapeHtml(entry.status)}</td>
       <td>${escapeHtml(includedLogs)}</td>
@@ -465,6 +473,7 @@ function renderDashboard() {
   $("#metricComplete").textContent = entries.filter((entry) => entry.status === "Complete").length;
   $("#metricInProcess").textContent = entries.filter((entry) => entry.status === "In Process").length;
   $("#metricOutOfSpec").textContent = entries.filter((entry) => entry.outOfSpec).length;
+  renderTrendChart(entries);
 }
 
 function filteredEntries() {
@@ -478,12 +487,143 @@ function filteredEntries() {
   return state.entries.filter((entry) => {
     if (start && entry.documentedDate < start) return false;
     if (end && entry.documentedDate > end) return false;
-    if (area && entry.area !== area) return false;
+    if (area && !entryHasLocation(entry, area)) return false;
     if (status && entry.status !== status) return false;
     if (employee && !entry.employee.toLowerCase().includes(employee)) return false;
     if (logName && !entry.logs.some((log) => log.included && log.name === logName)) return false;
     return true;
   });
+}
+
+function entryHasLocation(entry, location) {
+  return entry.logs.some((log) => log.included && (log.location === location || locationFromLog(log) === location));
+}
+
+function flattenMeasurements(entries) {
+  const metric = $("#filterMetric").value;
+  return entries.flatMap((entry) => entry.logs
+    .filter((log) => log.included)
+    .flatMap((log) => log.measurements.map((measurement) => ({
+      date: entry.documentedDate,
+      employee: entry.employee,
+      logName: log.name,
+      location: log.location || locationFromLog(log),
+      label: measurement.label,
+      metric: metricKey(measurement.label),
+      value: Number(measurement.value),
+      result: measurement.result
+    }))))
+    .filter((point) => Number.isFinite(point.value))
+    .filter((point) => !metric || point.metric === metric);
+}
+
+function renderTrendChart(entries) {
+  const canvas = $("#trendChart");
+  const ctx = canvas.getContext("2d");
+  const points = flattenMeasurements(entries).sort((a, b) => a.date.localeCompare(b.date));
+  const width = canvas.width;
+  const height = canvas.height;
+  const padding = { top: 24, right: 24, bottom: 52, left: 62 };
+  ctx.clearRect(0, 0, width, height);
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, width, height);
+
+  if (!points.length) {
+    ctx.fillStyle = "#687b86";
+    ctx.font = "16px sans-serif";
+    ctx.fillText("No numeric measurements match the current filters.", padding.left, height / 2);
+    $("#chartSummary").textContent = "No numeric measurements match the current filters.";
+    return;
+  }
+
+  const values = points.map((point) => point.value);
+  let min = Math.min(...values);
+  let max = Math.max(...values);
+  if (min === max) {
+    min -= 1;
+    max += 1;
+  }
+  const dates = [...new Set(points.map((point) => point.date))];
+  const xFor = (date) => {
+    if (dates.length === 1) return (padding.left + width - padding.right) / 2;
+    return padding.left + (dates.indexOf(date) / (dates.length - 1)) * (width - padding.left - padding.right);
+  };
+  const yFor = (value) => height - padding.bottom - ((value - min) / (max - min)) * (height - padding.top - padding.bottom);
+
+  drawChartAxes(ctx, width, height, padding, min, max, dates);
+
+  const series = groupBy(points, (point) => `${point.location} - ${toTitleCase(point.metric)}`);
+  const colors = ["#182d3a", "#4f8e6b", "#a96a24", "#6d7f89", "#a43333", "#7e9f34"];
+  [...series.entries()].slice(0, 8).forEach(([name, seriesPoints], index) => {
+    ctx.strokeStyle = colors[index % colors.length];
+    ctx.fillStyle = colors[index % colors.length];
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    seriesPoints.forEach((point, pointIndex) => {
+      const x = xFor(point.date);
+      const y = yFor(point.value);
+      if (pointIndex === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+    seriesPoints.forEach((point) => {
+      ctx.beginPath();
+      ctx.arc(xFor(point.date), yFor(point.value), 4, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    ctx.font = "12px sans-serif";
+    ctx.fillText(name, padding.left + 8, padding.top + 16 + index * 18);
+  });
+
+  $("#chartSummary").textContent = `${points.length} numeric measurement${points.length === 1 ? "" : "s"} shown. Showing up to 8 series at once.`;
+}
+
+function drawChartAxes(ctx, width, height, padding, min, max, dates) {
+  ctx.strokeStyle = "#d7e2e4";
+  ctx.fillStyle = "#687b86";
+  ctx.lineWidth = 1;
+  ctx.font = "12px sans-serif";
+
+  for (let i = 0; i <= 4; i += 1) {
+    const value = min + ((max - min) * i) / 4;
+    const y = height - padding.bottom - (i / 4) * (height - padding.top - padding.bottom);
+    ctx.beginPath();
+    ctx.moveTo(padding.left, y);
+    ctx.lineTo(width - padding.right, y);
+    ctx.stroke();
+    ctx.fillText(value.toFixed(1), 10, y + 4);
+  }
+
+  const shownDates = dates.length > 6 ? dates.filter((_, index) => index % Math.ceil(dates.length / 6) === 0) : dates;
+  shownDates.forEach((date) => {
+    const x = dates.length === 1 ? (padding.left + width - padding.right) / 2 : padding.left + (dates.indexOf(date) / (dates.length - 1)) * (width - padding.left - padding.right);
+    ctx.fillText(date.slice(5), x - 16, height - 20);
+  });
+}
+
+function groupBy(items, getKey) {
+  return items.reduce((map, item) => {
+    const key = getKey(item);
+    if (!map.has(key)) map.set(key, []);
+    map.get(key).push(item);
+    return map;
+  }, new Map());
+}
+
+function metricKey(label) {
+  const normalized = label.toLowerCase();
+  if (normalized.includes("humidity")) return "humidity";
+  if (normalized.includes("pressure")) return "pressure";
+  if (normalized.includes("temperature")) return "temperature";
+  return normalized;
+}
+
+function locationFromLog(log) {
+  return LOG_DEFINITIONS.find((definition) => definition.id === log.id)?.location || log.name.replace(/ (Temperature\/Humidity|Temperature|Eyewash Station|Differential Pressure) Log$/, "");
+}
+
+function toTitleCase(value) {
+  return String(value).replace(/\w\S*/g, (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase());
 }
 
 function switchView(viewId) {
