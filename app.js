@@ -151,9 +151,18 @@ function bindEvents() {
   $("#submitInProcess").addEventListener("click", () => submitEntry("In Process"));
   $("#saveDraft").addEventListener("click", saveDraft);
   $("#markNA").addEventListener("change", toggleNAState);
-  $("#includeAllLogs").addEventListener("click", () => setIncludedLogs("all"));
-  $("#clearIncludedLogs").addEventListener("click", () => setIncludedLogs("none"));
-  $("#pmPressureOnly").addEventListener("click", () => setIncludedLogs("pmPressureOnly"));
+  $("#includeAllLogs").addEventListener("click", (event) => {
+    event.preventDefault();
+    setIncludedLogs("all");
+  });
+  $("#clearIncludedLogs").addEventListener("click", (event) => {
+    event.preventDefault();
+    setIncludedLogs("none");
+  });
+  $("#pmPressureOnly").addEventListener("click", (event) => {
+    event.preventDefault();
+    setIncludedLogs("pmPressureOnly");
+  });
   $("#saveSettings").addEventListener("click", saveSettings);
   $("#testSettings").addEventListener("click", sendTestPing);
   $("#refreshDashboard").addEventListener("click", refreshFromSheet);
@@ -282,14 +291,18 @@ function toggleNAState() {
 
 function setIncludedLogs(mode) {
   $("#markNA").checked = false;
-  $$(".log-enabled").forEach((checkbox) => {
-    const card = checkbox.closest(".log-card");
-    if (mode === "all") checkbox.checked = true;
-    if (mode === "none") checkbox.checked = false;
-    if (mode === "pmPressureOnly") checkbox.checked = card.dataset.logId === "differentialPressure_pm";
+  $("#naCommentWrap").classList.add("is-hidden");
+  $("#naComment").required = false;
+
+  $$(".log-card").forEach((card) => {
+    const checkbox = $(".log-enabled", card);
+    checkbox.disabled = false;
+    checkbox.checked = mode === "all" || (mode === "pmPressureOnly" && card.dataset.logId === "differentialPressure_pm");
+    updateLogCardState(card, checkbox.checked);
   });
-  toggleNAState();
+  handleConditionalRequirements();
   updateOutOfSpecState();
+  $("#syncStatus").textContent = mode === "all" ? "All checklist items included" : mode === "none" ? "All checklist items cleared" : "PM pressure only selected";
 }
 
 function updateOutOfSpecState() {
