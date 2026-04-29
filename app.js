@@ -1,4 +1,4 @@
-const DEFAULT_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzq2hgD8IyLxK82Rk8t5G4fjRpOECd-_q3uxwvh8uP7xX4J0R7Ew7drTEI7fjLeWqG-9w/exec";
+const DEFAULT_SCRIPT_URL = "";
 
 const TEMPERATURE_HUMIDITY_LOCATIONS = [
   "Front Hallway",
@@ -271,7 +271,7 @@ function toggleNAState() {
   const isNA = $("#markNA").checked;
   $$("#logList input, #logList select, #logList textarea").forEach((field) => {
     field.disabled = isNA;
-    if (field.classList.contains("log-enabled")) field.checked = !isNA;
+    if (field.classList.contains("log-enabled") && isNA) field.checked = false;
     if (field.matches("input, select, textarea") && !field.classList.contains("log-enabled")) {
       field.required = !isNA && !field.closest(".log-card").querySelector(".log-enabled").checked ? false : !isNA;
     }
