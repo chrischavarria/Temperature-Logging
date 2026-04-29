@@ -1,4 +1,4 @@
-const DEFAULT_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzq2hgD8IyLxK82Rk8t5G4fjRpOECd-_q3uxwvh8uP7xX4J0R7Ew7drTEI7fjLeWqG-9w/exec";
+const DEFAULT_SCRIPT_URL = "";
 
 const TEMPERATURE_HUMIDITY_LOCATIONS = [
   "Front Hallway",
@@ -51,13 +51,22 @@ const LOG_DEFINITIONS = [
     ]
   })),
   {
-    id: "differentialPressure_daily",
-    name: "Differential Pressure Log",
+    id: "differentialPressure_am",
+    name: "AM Differential Pressure Log",
     group: "Differential Pressure",
     location: "Differential Pressure",
-    spec: "One location checked daily: AM and PM, normal range -0.01 to -0.03 in H2O",
+    spec: "Morning recording, normal range -0.01 to -0.03 in H2O",
     measurements: [
-      { id: "amPressure", label: "AM pressure", unit: "in H2O", min: -0.03, max: -0.01 },
+      { id: "amPressure", label: "AM pressure", unit: "in H2O", min: -0.03, max: -0.01 }
+    ]
+  },
+  {
+    id: "differentialPressure_pm",
+    name: "PM Differential Pressure Log",
+    group: "Differential Pressure",
+    location: "Differential Pressure",
+    spec: "Evening recording, normal range -0.01 to -0.03 in H2O",
+    measurements: [
       { id: "pmPressure", label: "PM pressure", unit: "in H2O", min: -0.03, max: -0.01 }
     ]
   },
@@ -142,6 +151,9 @@ function bindEvents() {
   $("#submitInProcess").addEventListener("click", () => submitEntry("In Process"));
   $("#saveDraft").addEventListener("click", saveDraft);
   $("#markNA").addEventListener("change", toggleNAState);
+  $("#includeAllLogs").addEventListener("click", () => setIncludedLogs("all"));
+  $("#clearIncludedLogs").addEventListener("click", () => setIncludedLogs("none"));
+  $("#pmPressureOnly").addEventListener("click", () => setIncludedLogs("pmPressureOnly"));
   $("#saveSettings").addEventListener("click", saveSettings);
   $("#testSettings").addEventListener("click", sendTestPing);
   $("#refreshDashboard").addEventListener("click", refreshFromSheet);
@@ -268,6 +280,18 @@ function toggleNAState() {
   updateOutOfSpecState();
 }
 
+function setIncludedLogs(mode) {
+  $("#markNA").checked = false;
+  $$(".log-enabled").forEach((checkbox) => {
+    const card = checkbox.closest(".log-card");
+    if (mode === "all") checkbox.checked = true;
+    if (mode === "none") checkbox.checked = false;
+    if (mode === "pmPressureOnly") checkbox.checked = card.dataset.logId === "differentialPressure_pm";
+  });
+  toggleNAState();
+  updateOutOfSpecState();
+}
+
 function updateOutOfSpecState() {
   const isNA = $("#markNA").checked;
   let hasOutOfSpec = false;
@@ -376,6 +400,12 @@ function submitEntry(status) {
   updateOutOfSpecState();
 
   const entry = collectEntry(status);
+  if (!$("#markNA").checked && !entry.logs.some((log) => log.included)) {
+    $("#syncStatus").textContent = "Select at least one checklist item or mark the day N/A";
+    $("#logList").scrollIntoView({ behavior: "smooth", block: "start" });
+    return;
+  }
+
   if (status === "Complete" && entry.outOfSpec && !$("#markNA").checked) {
     $("#outOfSpecPanel").scrollIntoView({ behavior: "smooth", block: "center" });
     return;

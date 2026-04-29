@@ -16,13 +16,14 @@ Static GitHub Pages checklist for daily temperature, humidity, differential pres
   - Temperature/humidity for Front Hallway, Tablet Room, Capsule Room, Back Hallway, Base Storage, Fulfillment Area, Non-HD Lab, Packing Area, HD Lab, and Receiving Area.
   - Room temperature: 68°F-77°F
   - Humidity: less than 60%
-  - Differential pressure: one daily location, AM and PM, -0.03 to -0.01 in H2O
+  - Differential pressure: one daily location with separate AM and PM entries, -0.03 to -0.01 in H2O
   - Refrigerator checks for Non-HD Lab Fridge, HD Lab Fridge, and Receiving Fridge: 36°F-46°F
   - Freezer check for Non-HD Lab Freezer: -13°F to 14°F
   - Eyewash checks for Non-HD Lab and HD Lab: pathway clear, station unobstructed, clear water flow, no leaks, unexpired
 - In-process save path for out-of-spec entries, with required supervisor notification acknowledgement.
 - N/A day option with required comment.
 - Required note when the submitted date differs from the documented work date.
+- Include controls to include all logs, clear all logs, or submit PM differential pressure by itself.
 - Dashboard filters for date range, location, status, log type, and employee.
 - Dashboard trend graph for numeric readings, with filters for location, log type, status, date range, employee, and metric.
 - Google Sheet writes to a master raw-entry tab and separate location tabs for easier review.

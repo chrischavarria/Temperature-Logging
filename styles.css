@@ -242,6 +242,14 @@ textarea:focus {
   gap: 14px;
 }
 
+.include-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+  margin: 0 0 14px;
+}
+
 .log-card-head {
   align-items: start;
   border-bottom: 1px solid var(--line);
@@ -469,6 +477,11 @@ th {
     justify-content: stretch;
   }
 
+  .include-toolbar {
+    justify-content: stretch;
+  }
+
+  .include-toolbar button,
   .submit-row button {
     width: 100%;
   }
