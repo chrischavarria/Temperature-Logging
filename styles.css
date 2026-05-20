@@ -156,7 +156,8 @@ main {
 
 .panel,
 .log-card,
-.alert-panel {
+.alert-panel,
+.confirmation-panel {
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -322,6 +323,22 @@ textarea:focus {
 
 .alert-panel h3 {
   color: var(--warn);
+}
+
+.confirmation-panel {
+  background: #eef8eb;
+  border-color: #b9dfad;
+  margin-top: 16px;
+}
+
+.confirmation-panel h3 {
+  color: var(--good);
+}
+
+.confirmation-panel p {
+  color: var(--ink);
+  font-weight: 700;
+  margin-bottom: 8px;
 }
 
 .submit-row {

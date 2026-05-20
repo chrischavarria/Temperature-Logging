@@ -1,4 +1,4 @@
-const DEFAULT_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzq2hgD8IyLxK82Rk8t5G4fjRpOECd-_q3uxwvh8uP7xX4J0R7Ew7drTEI7fjLeWqG-9w/exec";
+const DEFAULT_SCRIPT_URL = "";
 
 const TEMPERATURE_HUMIDITY_LOCATIONS = [
   "Front Hallway",
@@ -515,10 +515,31 @@ function submitEntry(status) {
   localStorage.removeItem(DRAFT_KEY);
   entriesToSave.forEach((item) => postToSheet({ action: "saveEntry", entry: item }));
   $("#syncStatus").textContent = supplementalEntries.length ? "Saved locally with weekend closures" : "Saved locally";
+  showSubmissionConfirmation(entry, supplementalEntries);
   $("#entryForm").reset();
   setDefaultDates();
   toggleNAState();
   renderDashboard();
+}
+
+function showSubmissionConfirmation(entry, supplementalEntries) {
+  const panel = $("#submissionConfirmation");
+  const summary = $("#confirmationSummary");
+  const details = $("#confirmationDetails");
+  const submittedAt = new Date().toLocaleString();
+  summary.textContent = `${entry.status} entry for ${entry.documentedDate} was recorded for ${entry.employee || "the employee"}.`;
+  details.innerHTML = "";
+  [
+    `Submitted: ${submittedAt}`,
+    `Sheet sync request sent for ${entry.documentedDate}.`,
+    ...supplementalEntries.map((item) => `Auto-created closure record: ${item.documentedDate} (${item.naComment})`)
+  ].forEach((line) => {
+    const li = document.createElement("li");
+    li.textContent = line;
+    details.appendChild(li);
+  });
+  panel.classList.remove("is-hidden");
+  panel.scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
 function saveDraft() {
