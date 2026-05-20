@@ -27,7 +27,7 @@
         <div class="section-head">
           <div>
             <h2 id="entryTitle">New checklist entry</h2>
-            <p>Complete each applicable log, or mark the documented day as N/A with a required note.</p>
+            <p>Complete each applicable log, or document a closed day with the required note.</p>
           </div>
           <div class="status-chip" id="syncStatus">Offline-ready</div>
         </div>
@@ -60,7 +60,7 @@
 
             <label id="dateChangeNoteWrap" class="note-field is-hidden">
               Required note for documentation date change
-              <textarea id="dateChangeNote" name="dateChangeNote" rows="3" placeholder="Example: Thursday 04/23/2026 tasks completed at 5:00 PM by Ali; electronic submission entered Friday 04/24/2026."></textarea>
+              <textarea id="dateChangeNote" name="dateChangeNote" rows="3" placeholder="Example: Thursday tasks completed at 5:00 PM by Ali; electronic submission entered Friday."></textarea>
             </label>
 
             <div class="switch-row">
@@ -71,9 +71,22 @@
               <p>Use this for non-working days or days when the listed checks do not apply.</p>
             </div>
 
+            <div class="switch-row">
+              <label class="checkbox-line">
+                <input id="markHoliday" name="markHoliday" type="checkbox">
+                Closed for holiday
+              </label>
+              <p>Use this when the documented day is closed for a holiday.</p>
+            </div>
+
+            <label id="holidayNameWrap" class="note-field is-hidden">
+              Holiday name
+              <input id="holidayName" name="holidayName" placeholder="Example: Memorial Day">
+            </label>
+
             <label id="naCommentWrap" class="note-field is-hidden">
-              Required N/A comment
-              <textarea id="naComment" name="naComment" rows="3" placeholder="Add the reason this documented day is N/A."></textarea>
+              Required closure / N/A comment
+              <textarea id="naComment" name="naComment" rows="3" placeholder="Add the reason this documented day is closed or N/A."></textarea>
             </label>
           </section>
 
@@ -216,6 +229,8 @@
         <section class="panel">
           <h3>Automation expectations</h3>
           <ul class="plain-list">
+            <li>Friday submissions automatically document the following Saturday and Sunday as closed.</li>
+            <li>Holiday closures can be documented with a required holiday name and closure comment.</li>
             <li>AM Slack reminder: asks the team to complete the required logs.</li>
             <li>PM Slack reminder: posts incomplete documented-day tasks.</li>
             <li>Sunday weekly export: emails a CSV export and can also notify Slack.</li>

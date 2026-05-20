@@ -1,4 +1,4 @@
-const DEFAULT_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzq2hgD8IyLxK82Rk8t5G4fjRpOECd-_q3uxwvh8uP7xX4J0R7Ew7drTEI7fjLeWqG-9w/exec";
+const DEFAULT_SCRIPT_URL = "";
 
 const TEMPERATURE_HUMIDITY_LOCATIONS = [
   "Front Hallway",
@@ -151,6 +151,7 @@ function bindEvents() {
   $("#submitInProcess").addEventListener("click", () => submitEntry("In Process"));
   $("#saveDraft").addEventListener("click", saveDraft);
   $("#markNA").addEventListener("change", toggleNAState);
+  $("#markHoliday").addEventListener("change", toggleNAState);
   $("#includeAllLogs").addEventListener("click", (event) => {
     event.preventDefault();
     setIncludedLogs("all");
@@ -271,18 +272,21 @@ function handleConditionalRequirements() {
   $("#dateChangeNoteWrap").classList.toggle("is-hidden", !dateChanged);
   $("#dateChangeNote").required = dateChanged;
 
-  const isNA = $("#markNA").checked;
-  $("#naCommentWrap").classList.toggle("is-hidden", !isNA);
-  $("#naComment").required = isNA;
+  const isHoliday = $("#markHoliday").checked;
+  const isClosed = isClosedEntry();
+  $("#holidayNameWrap").classList.toggle("is-hidden", !isHoliday);
+  $("#holidayName").required = isHoliday;
+  $("#naCommentWrap").classList.toggle("is-hidden", !isClosed);
+  $("#naComment").required = isClosed;
 }
 
 function toggleNAState() {
-  const isNA = $("#markNA").checked;
+  const isClosed = isClosedEntry();
   $$("#logList input, #logList select, #logList textarea").forEach((field) => {
-    field.disabled = isNA;
-    if (field.classList.contains("log-enabled") && isNA) field.checked = false;
+    field.disabled = isClosed;
+    if (field.classList.contains("log-enabled") && isClosed) field.checked = false;
     if (field.matches("input, select, textarea") && !field.classList.contains("log-enabled")) {
-      field.required = !isNA && !field.closest(".log-card").querySelector(".log-enabled").checked ? false : !isNA;
+      field.required = !isClosed && !field.closest(".log-card").querySelector(".log-enabled").checked ? false : !isClosed;
     }
   });
   handleConditionalRequirements();
@@ -291,8 +295,11 @@ function toggleNAState() {
 
 function setIncludedLogs(mode) {
   $("#markNA").checked = false;
+  $("#markHoliday").checked = false;
   $("#naCommentWrap").classList.add("is-hidden");
   $("#naComment").required = false;
+  $("#holidayNameWrap").classList.add("is-hidden");
+  $("#holidayName").required = false;
 
   $$(".log-card").forEach((card) => {
     const checkbox = $(".log-enabled", card);
@@ -306,12 +313,12 @@ function setIncludedLogs(mode) {
 }
 
 function updateOutOfSpecState() {
-  const isNA = $("#markNA").checked;
+  const isClosed = isClosedEntry();
   let hasOutOfSpec = false;
 
   LOG_DEFINITIONS.forEach((log) => {
     const card = $(`[data-log-id="${log.id}"]`);
-    const enabled = $(".log-enabled", card).checked && !isNA;
+    const enabled = $(".log-enabled", card).checked && !isClosed;
     updateLogCardState(card, enabled);
 
     log.measurements.forEach((measurement) => {
@@ -331,10 +338,10 @@ function updateOutOfSpecState() {
     });
   });
 
-  $("#outOfSpecPanel").classList.toggle("is-hidden", !hasOutOfSpec || isNA);
-  $("#submitInProcess").classList.toggle("is-hidden", !hasOutOfSpec || isNA);
-  $("#submitComplete").disabled = hasOutOfSpec && !isNA;
-  $("#supervisorAcknowledged").required = hasOutOfSpec && !isNA;
+  $("#outOfSpecPanel").classList.toggle("is-hidden", !hasOutOfSpec || isClosed);
+  $("#submitInProcess").classList.toggle("is-hidden", !hasOutOfSpec || isClosed);
+  $("#submitComplete").disabled = hasOutOfSpec && !isClosed;
+  $("#supervisorAcknowledged").required = hasOutOfSpec && !isClosed;
 }
 
 function updateLogCardState(card, enabled) {
@@ -360,11 +367,22 @@ function setPill(pill, text, className) {
   pill.className = `result-pill ${className}`;
 }
 
+function isClosedEntry() {
+  return $("#markNA").checked || $("#markHoliday").checked;
+}
+
+function closureComment() {
+  const note = $("#naComment").value.trim();
+  if (!$("#markHoliday").checked) return note;
+  const holiday = $("#holidayName").value.trim();
+  return [holiday ? `Holiday closure: ${holiday}.` : "Holiday closure.", note].filter(Boolean).join(" ");
+}
+
 function collectEntry(status) {
-  const isNA = $("#markNA").checked;
+  const isClosed = isClosedEntry();
   const logs = LOG_DEFINITIONS.map((log) => {
     const card = $(`[data-log-id="${log.id}"]`);
-    const enabled = $(".log-enabled", card).checked && !isNA;
+    const enabled = $(".log-enabled", card).checked && !isClosed;
     const measurements = log.measurements.map((measurement) => {
       const value = $(`[name="${log.id}_${measurement.id}"]`).value;
       return {
@@ -399,13 +417,72 @@ function collectEntry(status) {
     completionTime: $("#completionTime").value,
     submittedDate: $("#submittedDate").value,
     area: "Daily Facility Check",
-    status: isNA ? "N/A" : status,
+    status: isClosed ? "N/A" : status,
+    closureType: $("#markHoliday").checked ? "Holiday" : $("#markNA").checked ? "N/A" : "",
+    holidayName: $("#holidayName").value.trim(),
     dateChangeNote: $("#dateChangeNote").value.trim(),
-    naComment: $("#naComment").value.trim(),
+    naComment: closureComment(),
     supervisorAcknowledged: $("#supervisorAcknowledged").checked,
     outOfSpec,
     logs
   };
+}
+
+function buildWeekendClosureEntries(entry) {
+  if (!entry.documentedDate || !isFriday(entry.documentedDate)) return [];
+  return [1, 2].map((offset) => {
+    const date = addDays(entry.documentedDate, offset);
+    const dayName = offset === 1 ? "Saturday" : "Sunday";
+    return createClosureEntry(entry, date, "Weekend", `${dayName} closure documented automatically from Friday ${entry.documentedDate} submission.`);
+  });
+}
+
+function createClosureEntry(baseEntry, documentedDate, closureType, comment) {
+  return {
+    id: crypto.randomUUID ? crypto.randomUUID() : `${baseEntry.id}-${documentedDate}`,
+    createdAt: new Date().toISOString(),
+    employee: baseEntry.employee,
+    initials: baseEntry.initials,
+    documentedDate,
+    completionTime: baseEntry.completionTime,
+    submittedDate: baseEntry.submittedDate,
+    area: "Daily Facility Check",
+    status: "N/A",
+    autoCreated: true,
+    closureType,
+    holidayName: closureType === "Holiday" ? baseEntry.holidayName : "",
+    dateChangeNote: `Auto-created from ${baseEntry.documentedDate} submission.`,
+    naComment: comment,
+    supervisorAcknowledged: false,
+    outOfSpec: false,
+    logs: LOG_DEFINITIONS.map((log) => ({
+      id: log.id,
+      name: log.name,
+      group: log.group,
+      location: log.location,
+      spec: log.spec,
+      included: false,
+      notes: comment,
+      measurements: log.measurements.map((measurement) => ({
+        id: measurement.id,
+        label: measurement.label,
+        value: "",
+        unit: measurement.unit || "",
+        acceptable: measurement.type === "boolean" ? "Yes" : acceptableResponse(measurement),
+        result: "Not Recorded"
+      }))
+    }))
+  };
+}
+
+function isFriday(dateString) {
+  return new Date(`${dateString}T00:00:00`).getDay() === 5;
+}
+
+function addDays(dateString, days) {
+  const date = new Date(`${dateString}T00:00:00`);
+  date.setDate(date.getDate() + days);
+  return date.toISOString().slice(0, 10);
 }
 
 function submitEntry(status) {
@@ -413,13 +490,13 @@ function submitEntry(status) {
   updateOutOfSpecState();
 
   const entry = collectEntry(status);
-  if (!$("#markNA").checked && !entry.logs.some((log) => log.included)) {
+  if (!isClosedEntry() && !entry.logs.some((log) => log.included)) {
     $("#syncStatus").textContent = "Select at least one checklist item or mark the day N/A";
     $("#logList").scrollIntoView({ behavior: "smooth", block: "start" });
     return;
   }
 
-  if (status === "Complete" && entry.outOfSpec && !$("#markNA").checked) {
+  if (status === "Complete" && entry.outOfSpec && !isClosedEntry()) {
     $("#outOfSpecPanel").scrollIntoView({ behavior: "smooth", block: "center" });
     return;
   }
@@ -431,11 +508,13 @@ function submitEntry(status) {
 
   if (!$("#entryForm").reportValidity()) return;
 
-  state.entries.unshift(entry);
+  const supplementalEntries = status === "Draft" ? [] : buildWeekendClosureEntries(entry);
+  const entriesToSave = [entry, ...supplementalEntries];
+  state.entries.unshift(...entriesToSave);
   writeJson(STORAGE_KEY, state.entries);
   localStorage.removeItem(DRAFT_KEY);
-  postToSheet({ action: "saveEntry", entry });
-  $("#syncStatus").textContent = "Saved locally";
+  entriesToSave.forEach((item) => postToSheet({ action: "saveEntry", entry: item }));
+  $("#syncStatus").textContent = supplementalEntries.length ? "Saved locally with weekend closures" : "Saved locally";
   $("#entryForm").reset();
   setDefaultDates();
   toggleNAState();
@@ -458,6 +537,8 @@ function loadDraft() {
   $("#completionTime").value = draft.completionTime || "";
   $("#submittedDate").value = draft.submittedDate || $("#submittedDate").value;
   $("#markNA").checked = draft.status === "N/A";
+  $("#markHoliday").checked = draft.closureType === "Holiday";
+  $("#holidayName").value = draft.holidayName || "";
   $("#dateChangeNote").value = draft.dateChangeNote || "";
   $("#naComment").value = draft.naComment || "";
 

@@ -22,11 +22,13 @@ Static GitHub Pages checklist for daily temperature, humidity, differential pres
   - Eyewash checks for Non-HD Lab and HD Lab: pathway clear, station unobstructed, clear water flow, no leaks, unexpired
 - In-process save path for out-of-spec entries, with required supervisor notification acknowledgement.
 - N/A day option with required comment.
+- Holiday closure option with required holiday name and closure comment.
+- Friday submissions automatically add N/A closure records for the following Saturday and Sunday.
 - Required note when the submitted date differs from the documented work date.
 - Include controls to include all logs, clear all logs, or submit PM differential pressure by itself.
 - Dashboard filters for date range, location, status, log type, and employee.
 - Dashboard trend graph for numeric readings, with filters for location, log type, status, date range, employee, and metric.
-- Google Sheet writes to a master raw-entry tab and separate location tabs for easier review.
+- Google Sheet writes to a master raw-entry tab and separate location tabs for easier review, including closed-day rows for weekends and holidays.
 
 ## Google Sheet and Apps Script Setup
 
