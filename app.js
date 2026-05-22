@@ -1,4 +1,4 @@
-const DEFAULT_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzq2hgD8IyLxK82Rk8t5G4fjRpOECd-_q3uxwvh8uP7xX4J0R7Ew7drTEI7fjLeWqG-9w/exec";
+const DEFAULT_SCRIPT_URL = "";
 
 const TEMPERATURE_HUMIDITY_LOCATIONS = [
   "Front Hallway",
@@ -513,7 +513,7 @@ function submitEntry(status) {
   state.entries.unshift(...entriesToSave);
   writeJson(STORAGE_KEY, state.entries);
   localStorage.removeItem(DRAFT_KEY);
-  entriesToSave.forEach((item) => postToSheet({ action: "saveEntry", entry: item }));
+  postToSheet({ action: "saveEntries", entries: entriesToSave });
   $("#syncStatus").textContent = supplementalEntries.length ? "Saved locally with weekend closures" : "Saved locally";
   showSubmissionConfirmation(entry, supplementalEntries);
   $("#entryForm").reset();
