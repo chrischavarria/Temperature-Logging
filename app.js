@@ -1,4 +1,4 @@
-const DEFAULT_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzq2hgD8IyLxK82Rk8t5G4fjRpOECd-_q3uxwvh8uP7xX4J0R7Ew7drTEI7fjLeWqG-9w/exec";
+const DEFAULT_SCRIPT_URL = "";
 
 const TEMPERATURE_HUMIDITY_LOCATIONS = [
   "Front Hallway",
@@ -430,11 +430,17 @@ function collectEntry(status) {
 
 function buildWeekendClosureEntries(entry) {
   if (!entry.documentedDate || !isFriday(entry.documentedDate)) return [];
+  if (isPmPressureOnlyEntry(entry)) return [];
   return [1, 2].map((offset) => {
     const date = addDays(entry.documentedDate, offset);
     const dayName = offset === 1 ? "Saturday" : "Sunday";
     return createClosureEntry(entry, date, "Weekend", `${dayName} closure documented automatically from Friday ${entry.documentedDate} submission.`);
   });
+}
+
+function isPmPressureOnlyEntry(entry) {
+  const includedLogs = entry.logs.filter((log) => log.included);
+  return includedLogs.length === 1 && includedLogs[0].id === "differentialPressure_pm";
 }
 
 function createClosureEntry(baseEntry, documentedDate, closureType, comment) {
