@@ -91,8 +91,6 @@
           </section>
 
           <section class="include-toolbar" aria-label="Checklist include controls">
-            <button class="secondary" id="includeAllLogs" type="button">Include all</button>
-            <button class="secondary" id="clearIncludedLogs" type="button">Clear all</button>
             <button class="secondary" id="pmPressureOnly" type="button">PM pressure only</button>
           </section>
 
@@ -253,10 +251,7 @@
             <h3></h3>
             <p class="spec"></p>
           </div>
-          <label class="checkbox-line">
-            <input class="log-enabled" type="checkbox" checked>
-            Include
-          </label>
+          <input class="log-enabled" type="checkbox" checked aria-label="Included in submission">
         </div>
         <div class="measurement-list"></div>
         <label>

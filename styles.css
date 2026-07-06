@@ -251,6 +251,10 @@ textarea:focus {
   margin: 0 0 14px;
 }
 
+.log-enabled {
+  display: none;
+}
+
 .log-card-head {
   align-items: start;
   border-bottom: 1px solid var(--line);

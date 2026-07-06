@@ -6,7 +6,7 @@ Static GitHub Pages checklist for daily temperature, humidity, differential pres
 
 - `index.html`, `styles.css`, `app.js`: the GitHub Pages app.
 - `scriptstation-logo.svg`: ScriptStation logo asset used in the app header.
-- `google-apps-script.gs`: Google Apps Script backend for Google Sheets, Slack reminders, and weekly exports.
+- `google-apps-script.gs`: Google Apps Script backend for Google Sheets, Slack reminders, and scheduled archives.
 - Source `.docx` files: original paper forms used to define checklist fields and ranges.
 
 ## Frontend Features
@@ -25,10 +25,11 @@ Static GitHub Pages checklist for daily temperature, humidity, differential pres
 - Holiday closure option with required holiday name and closure comment.
 - Friday submissions automatically add N/A closure records for the following Saturday and Sunday.
 - Required note when the submitted date differs from the documented work date.
-- Include controls to include all logs, clear all logs, or submit PM differential pressure by itself.
+- All logs are included by default after each submission, with a PM pressure only shortcut for evening differential pressure documentation.
 - Dashboard filters for date range, location, status, log type, and employee.
 - Dashboard trend graph for numeric readings, with filters for location, log type, status, date range, employee, and metric.
 - Google Sheet writes to a master raw-entry tab and separate location tabs for easier review, including closed-day rows for weekends and holidays.
+- Apps Script can archive weekly or previous-month rows, create a simplified monthly printout workbook, and optionally clear only the archived rows after the archive is created.
 
 ## Google Sheet and Apps Script Setup
 
@@ -38,7 +39,9 @@ Static GitHub Pages checklist for daily temperature, humidity, differential pres
 4. In Apps Script, open `Project Settings > Script properties` and add:
    - `SPREADSHEET_ID`: the ID from the Google Sheet URL.
    - `SLACK_WEBHOOK_URL`: the new Slack incoming webhook URL.
-   - `EXPORT_EMAIL`: optional email address for weekly CSV exports.
+   - `EXPORT_EMAIL`: optional email address for archive links.
+   - `EXPORT_FREQUENCY`: optional, `WEEKLY`, `MONTHLY`, or `BOTH`. Defaults to `WEEKLY`.
+   - `CLEAR_AFTER_EXPORT`: optional, set to `TRUE` only if archived rows should be cleared from the active Sheet after the archive copy is created.
 5. Run `setupTemperatureLogging()` once from Apps Script and approve permissions.
    - This creates the master tab plus location tabs for temperature/humidity, pressure, refrigerator, freezer, and eyewash records.
    - If the master tab already has entries, run `rebuildLocationTabs()` once to backfill the location tabs.
@@ -58,10 +61,16 @@ Static GitHub Pages checklist for daily temperature, humidity, differential pres
 
 ## Automation
 
-The Apps Script setup creates three time-based triggers:
+The Apps Script setup creates reminder triggers plus the selected archive trigger:
 
 - `sendAmReminder`: daily AM Slack reminder.
 - `sendPmIncompleteReminder`: daily PM Slack reminder if today has no Complete or N/A entry.
-- `sendWeeklyExport`: Sunday evening CSV export to Google Drive, optional email, and Slack notification.
+- `sendWeeklyExport`: Sunday evening archive of the previous seven days to Google Drive, optional email, and Slack notification.
+- `sendMonthlyExport`: first-day-of-month archive of the previous calendar month when `EXPORT_FREQUENCY` is `MONTHLY` or `BOTH`.
+- `createMonthlyPrintout`: manual simplified monthly printout for the previous calendar month.
 
 Adjust reminder times by editing `setupTemperatureLogging()` before running it, or edit the triggers in Apps Script after setup.
+
+Archives and printouts are saved in a Google Drive folder named `Temperature Logging Archives`. If `CLEAR_AFTER_EXPORT` is `TRUE`, Apps Script clears only the rows included in that archive after the archive copy and simplified printout have been created. For example, on `2026-07-01`, `sendMonthlyExport()` archives June 2026 rows, creates a simplified June 2026 printout, and clears only June rows from the live workbook.
+
+The simplified monthly printout creates one tab per location with top rows for month/year, location, supervisor notification text, and normal value range. Printout columns are: documented date, completion time, employee, log notes, value, unit, acceptable response, and result.

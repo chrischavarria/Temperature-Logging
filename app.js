@@ -152,17 +152,9 @@ function bindEvents() {
   $("#saveDraft").addEventListener("click", saveDraft);
   $("#markNA").addEventListener("change", toggleNAState);
   $("#markHoliday").addEventListener("change", toggleNAState);
-  $("#includeAllLogs").addEventListener("click", (event) => {
-    event.preventDefault();
-    setIncludedLogs("all");
-  });
-  $("#clearIncludedLogs").addEventListener("click", (event) => {
-    event.preventDefault();
-    setIncludedLogs("none");
-  });
   $("#pmPressureOnly").addEventListener("click", (event) => {
     event.preventDefault();
-    setIncludedLogs("pmPressureOnly");
+    selectPmPressureOnly();
   });
   $("#saveSettings").addEventListener("click", saveSettings);
   $("#testSettings").addEventListener("click", sendTestPing);
@@ -293,7 +285,7 @@ function toggleNAState() {
   updateOutOfSpecState();
 }
 
-function setIncludedLogs(mode) {
+function selectPmPressureOnly() {
   $("#markNA").checked = false;
   $("#markHoliday").checked = false;
   $("#naCommentWrap").classList.add("is-hidden");
@@ -303,13 +295,12 @@ function setIncludedLogs(mode) {
 
   $$(".log-card").forEach((card) => {
     const checkbox = $(".log-enabled", card);
-    checkbox.disabled = false;
-    checkbox.checked = mode === "all" || (mode === "pmPressureOnly" && card.dataset.logId === "differentialPressure_pm");
+    checkbox.checked = card.dataset.logId === "differentialPressure_pm";
     updateLogCardState(card, checkbox.checked);
   });
   handleConditionalRequirements();
   updateOutOfSpecState();
-  $("#syncStatus").textContent = mode === "all" ? "All checklist items included" : mode === "none" ? "All checklist items cleared" : "PM pressure only selected";
+  $("#syncStatus").textContent = "PM pressure only selected";
 }
 
 function updateOutOfSpecState() {
