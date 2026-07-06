@@ -376,6 +376,11 @@ button {
   color: var(--ink);
 }
 
+.secondary.is-selected {
+  background: var(--good);
+  color: #fff;
+}
+
 .warning {
   background: var(--warn);
   color: #fff;

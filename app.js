@@ -115,6 +115,7 @@ const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 
 const state = {
   entries: readJson(STORAGE_KEY, []),
+  entryMode: "default",
   settings: {
     scriptUrl: DEFAULT_SCRIPT_URL,
     ...readJson(SETTINGS_KEY, {})
@@ -124,6 +125,7 @@ const state = {
 document.addEventListener("DOMContentLoaded", () => {
   setDefaultDates();
   renderLogs();
+  applyDefaultIncludedLogs();
   renderFilterOptions();
   bindEvents();
   loadDraft();
@@ -152,6 +154,11 @@ function bindEvents() {
   $("#saveDraft").addEventListener("click", saveDraft);
   $("#markNA").addEventListener("change", toggleNAState);
   $("#markHoliday").addEventListener("change", toggleNAState);
+  $("#documentedDate").addEventListener("change", () => {
+    state.entryMode = "default";
+    applyDefaultIncludedLogs();
+    updateOutOfSpecState();
+  });
   $("#pmPressureOnly").addEventListener("click", (event) => {
     event.preventDefault();
     selectPmPressureOnly();
@@ -193,6 +200,30 @@ function renderLogs() {
 
     list.appendChild(node);
   });
+}
+
+function applyDefaultIncludedLogs() {
+  state.entryMode = "default";
+  LOG_DEFINITIONS.forEach((log) => {
+    const card = $(`[data-log-id="${log.id}"]`);
+    if (!card) return;
+    const checkbox = $(".log-enabled", card);
+    checkbox.checked = isDefaultIncludedLog(log);
+    updateLogCardState(card, checkbox.checked && !isClosedEntry());
+  });
+  updatePmPressureButtonState();
+}
+
+function isDefaultIncludedLog(log) {
+  if (log.id === "differentialPressure_pm") return false;
+  if (log.group === "Eyewash") return isDocumentedDateTuesday();
+  return true;
+}
+
+function isDocumentedDateTuesday() {
+  const documentedDate = $("#documentedDate").value;
+  if (!documentedDate) return false;
+  return new Date(`${documentedDate}T00:00:00`).getDay() === 2;
 }
 
 function createMeasurementRow(log, measurement) {
@@ -286,6 +317,7 @@ function toggleNAState() {
 }
 
 function selectPmPressureOnly() {
+  state.entryMode = "pmPressureOnly";
   $("#markNA").checked = false;
   $("#markHoliday").checked = false;
   $("#naCommentWrap").classList.add("is-hidden");
@@ -300,7 +332,12 @@ function selectPmPressureOnly() {
   });
   handleConditionalRequirements();
   updateOutOfSpecState();
+  updatePmPressureButtonState();
   $("#syncStatus").textContent = "PM pressure only selected";
+}
+
+function updatePmPressureButtonState() {
+  $("#pmPressureOnly").classList.toggle("is-selected", state.entryMode === "pmPressureOnly");
 }
 
 function updateOutOfSpecState() {
@@ -515,6 +552,7 @@ function submitEntry(status) {
   showSubmissionConfirmation(entry, supplementalEntries);
   $("#entryForm").reset();
   setDefaultDates();
+  applyDefaultIncludedLogs();
   toggleNAState();
   renderDashboard();
 }
@@ -573,8 +611,15 @@ function loadDraft() {
     });
   });
 
+  state.entryMode = isDraftPmPressureOnly(draft) ? "pmPressureOnly" : "default";
+  updatePmPressureButtonState();
   toggleNAState();
   updateOutOfSpecState();
+}
+
+function isDraftPmPressureOnly(draft) {
+  const includedLogs = draft.logs?.filter((log) => log.included) || [];
+  return includedLogs.length === 1 && includedLogs[0].id === "differentialPressure_pm";
 }
 
 function renderFilterOptions() {

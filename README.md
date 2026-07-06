@@ -25,7 +25,7 @@ Static GitHub Pages checklist for daily temperature, humidity, differential pres
 - Holiday closure option with required holiday name and closure comment.
 - Friday submissions automatically add N/A closure records for the following Saturday and Sunday.
 - Required note when the submitted date differs from the documented work date.
-- All logs are included by default after each submission, with a PM pressure only shortcut for evening differential pressure documentation.
+- Default submissions include morning checks and exclude PM differential pressure. Eyewash logs are included only on Tuesdays. The PM pressure only shortcut is highlighted when selected for evening differential pressure documentation.
 - Dashboard filters for date range, location, status, log type, and employee.
 - Dashboard trend graph for numeric readings, with filters for location, log type, status, date range, employee, and metric.
 - Google Sheet writes to a master raw-entry tab and separate location tabs for easier review, including closed-day rows for weekends and holidays.
