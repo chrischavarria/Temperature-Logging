@@ -1,6 +1,6 @@
 # Temperature Logging Checklist
 
-Static GitHub Pages checklist for daily temperature, humidity, differential pressure, refrigerator, freezer, and eyewash documentation.
+Static GitHub Pages checklist for daily temperature, humidity, differential pressure, refrigerator, and eyewash documentation.
 
 ## Files
 
@@ -18,7 +18,6 @@ Static GitHub Pages checklist for daily temperature, humidity, differential pres
   - Humidity: less than 60%
   - Differential pressure: one daily location with separate AM and PM entries, -0.03 to -0.01 in H2O
   - Refrigerator checks for Non-HD Lab Fridge, HD Lab Fridge, and Receiving Fridge: 36°F-46°F
-  - Freezer check for Non-HD Lab Freezer: -13°F to 14°F
   - Eyewash checks for Non-HD Lab and HD Lab: pathway clear, station unobstructed, clear water flow, no leaks, unexpired
 - In-process save path for out-of-spec entries, with required supervisor notification acknowledgement.
 - N/A day option with required comment.
@@ -43,7 +42,7 @@ Static GitHub Pages checklist for daily temperature, humidity, differential pres
    - `EXPORT_FREQUENCY`: optional, `WEEKLY`, `MONTHLY`, or `BOTH`. Defaults to `WEEKLY`.
    - `CLEAR_AFTER_EXPORT`: optional, set to `TRUE` only if archived rows should be cleared from the active Sheet after the archive copy is created.
 5. Run `setupTemperatureLogging()` once from Apps Script and approve permissions.
-   - This creates the master tab plus location tabs for temperature/humidity, pressure, refrigerator, freezer, and eyewash records.
+   - This creates the master tab plus location tabs for temperature/humidity, pressure, refrigerator, and eyewash records.
    - If the master tab already has entries, run `rebuildLocationTabs()` once to backfill the location tabs.
 6. Deploy as a web app:
    - Execute as: `Me`

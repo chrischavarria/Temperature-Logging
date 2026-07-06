@@ -19,9 +19,7 @@ const REFRIGERATOR_LOCATIONS = [
   "Receiving Fridge"
 ];
 
-const FREEZER_LOCATIONS = [
-  "Non-HD Lab Freezer"
-];
+const FREEZER_LOCATIONS = [];
 
 const EYEWASH_LOCATIONS = [
   "Non-HD Lab",
